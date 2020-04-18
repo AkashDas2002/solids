@@ -74,19 +74,90 @@ def scanline_convert(polygons, i, screen, zbuffer ):
     dz11 = (zT - zM) / (yT - yM + 1)
     color = [randint(0,255), randint(0,255), randint(0,255)]
     while y <= yM:
-        draw_line(int(x0), int(y), int(z0), int(x1), int(y), int(z1), screen, zbuffer, color)
+        scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
         y += 1
         x0 += dx0
         z0 += dz0
         x1 += dx10
         z1 += dz10
+
+    x1 = xM
+    y1 = yM    
+
     while y<= yT:
-        draw_line(int(x0), int(y), int(z0), int(x1), int(y), int(z1), screen, zbuffer, color)
+        scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
         y += 1
         x0 += dx0
         z0 += dz0
         x1 += dx11
         z1 += dz11
+
+def scanline(x0, y, z0, x1, z1, screen, zbuffer, color):
+    if x0 > x1:
+        xt = x0
+        zt = z0
+        x0 = x1
+        z0 = z1
+        x1 = xt
+        z1 = zt
+
+    x = x0
+    z = z0
+    A = 2 * (z1 - z0)
+    B = -2 * (x1 - x0)
+    wide = False
+    tall = False
+
+    if ( abs(x1-x0) >= abs(z1 - z0) ): #octants 1/8
+        wide = True
+        loop_start = x
+        loop_end = x1
+        dx_east = dx_northeast = 1
+        dy_east = 0
+        d_east = A
+        if ( A > 0 ): #octant 1
+            d = A + B/2
+            dy_northeast = 1
+            d_northeast = A + B
+        else: #octant 8
+            d = A - B/2
+            dy_northeast = -1
+            d_northeast = A - B
+
+    else: #octants 2/7
+        tall = True
+        dx_east = 0
+        dx_northeast = 1
+        if ( A > 0 ): #octant 2
+            d = A/2 + B
+            dy_east = dy_northeast = 1
+            d_northeast = A + B
+            d_east = B
+            loop_start = z
+            loop_end = z1
+        else: #octant 7
+            d = A/2 - B
+            dy_east = dy_northeast = -1
+            d_northeast = A - B
+            d_east = -1 * B
+            loop_start = z1
+            loop_end = z
+
+    while ( loop_start < loop_end ):
+        plot( screen, zbuffer, color, x, y, z )
+        if ( (wide and ((A > 0 and d > 0) or (A < 0 and d < 0))) or
+             (tall and ((A > 0 and d < 0) or (A < 0 and d > 0 )))):
+
+            x+= dx_northeast
+            z+= dy_northeast
+            d+= d_northeast
+        else:
+            x+= dx_east
+            z+= dy_east
+            d+= d_east
+        loop_start+= 1
+    plot( screen, zbuffer, color, x, y, z )
+
 
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0)
