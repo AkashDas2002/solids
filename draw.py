@@ -61,36 +61,53 @@ def scanline_convert(polygons, i, screen, zbuffer ):
             yB = polygons[i][1]
             xB = polygons[i][0]
 
-    y = yB
+    y = int(yB)
     x0 = xB
     z0 = zB
     x1 = xB
     z1 = zB
     dx0 = (xT - xB) / (yT - yB + 1)
     dz0 = (zT - zB) / (yT - yB + 1)
-    dx10 = (xM - xB) / (yM - yB + 1)
-    dx11 = (xT - xM) / (yT - yM + 1)
-    dz10 = (zM - zB) / (yM - yB + 1)
-    dz11 = (zT - zM) / (yT - yM + 1)
+    if abs(yM - yB) <= 0.001:
+        dx10 = 0
+        dz10 = 0
+    else:
+        dx10 = (xM - xB) / (yM - yB + 1)
+        dz10 = (zM - zB) / (yM - yB + 1)
+
+    if abs(yT - yM) <= 0.001:
+        dx11 = 0
+        dz11 = 0
+    else:
+        dx11 = (xT - xM) / (yT - yM + 1)
+        dz11 = (zT - zM) / (yT - yM + 1)
+
     color = [randint(0,255), randint(0,255), randint(0,255)]
-    while y <= yM:
-        scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
-        y += 1
+    while y <= yT:
+        # scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
+        scanline(round(x0), round(y), round(z0), round(x1), round(z1), screen, zbuffer, color)
         x0 += dx0
         z0 += dz0
         x1 += dx10
         z1 += dz10
+        if y == int(yM):
+            x1 = xM
+            y1 = yM
+            dx10 = dx11
+            dz10 = dz11
 
-    x1 = xM
-    y1 = yM    
-
-    while y<= yT:
-        scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
         y += 1
-        x0 += dx0
-        z0 += dz0
-        x1 += dx11
-        z1 += dz11
+
+    # x1 = xM
+    # y1 = yM
+
+    # while y<= yT:
+    #     scanline(int(x0), int(y), int(z0), int(x1), int(z1), screen, zbuffer, color)
+    #     y += 1
+    #     x0 += dx0
+    #     z0 += dz0
+    #     x1 += dx11
+    #     z1 += dz11
 
 def scanline(x0, y, z0, x1, z1, screen, zbuffer, color):
     if x0 > x1:
